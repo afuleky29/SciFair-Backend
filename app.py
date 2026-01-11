@@ -20,7 +20,3 @@ if "file" in request.files:
 
 if __name__ == "__main__":
     app.run()
-    @app.route("/", methods=["POST"])
-def run():
-    ...
-
