@@ -20,27 +20,18 @@ def run():
     try:
         image_input = None
 
-        # 1️⃣ FILE UPLOAD
+        # 1️⃣ FILE UPLOAD (multipart/form-data)
         if "file" in request.files:
             file = request.files["file"]
+            encoded = base64.b64encode(file.read()).decode("utf-8")
             image_input = {
                 "type": "base64",
-                "value": base64.b64encode(file.read()).decode("utf-8")
+                "value": encoded
             }
 
-        # 2️⃣ BASE64 (webcam)
-        elif request.json and "base64" in request.json:
-            image_input = {
-                "type": "base64",
-                "value": request.json["base64"].split(",")[-1]
-            }
-
-        # 3️⃣ URL
-        elif request.json and "url" in request.json:
-            image_input = {
-                "type": "url",
-                "value": request.json["url"]
-            }
+        # 2️⃣ JSON INPUT (URL or BASE64)
+        elif request.is_json and "image" in request.json:
+            image_input = request.json["image"]
 
         else:
             return jsonify({"error": "No image provided"}), 400
@@ -70,3 +61,4 @@ if __name__ == "__main__":
         host="0.0.0.0",
         port=int(os.environ.get("PORT", 10000))
     )
+
