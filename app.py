@@ -19,6 +19,7 @@ def run():
 
         # FILE UPLOAD
         if "file" in request.files:
+            print("ROBOFLOW RESPONSE:", rf_res.text)
             file = request.files["file"]
             image_input = {
                 "type": "base64",
@@ -27,15 +28,18 @@ def run():
 
         # JSON INPUT
         elif request.is_json:
+            print("ROBOFLOW RESPONSE:", rf_res.text)
             data = request.json
 
             if "url" in data:
+                print("ROBOFLOW RESPONSE:", rf_res.text)
                 image_input = {
                     "type": "url",
                     "value": data["url"]
                 }
 
             elif "base64" in data:
+                print("ROBOFLOW RESPONSE:", rf_res.text)
                 image_input = {
                     "type": "base64",
                     "value": data["base64"].split(",")[-1]
