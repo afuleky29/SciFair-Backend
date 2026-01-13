@@ -1,6 +1,8 @@
 from flask import Flask, request, jsonify
 from flask_cors import CORS
-import requests, base64, os
+import requests
+import base64
+import os
 
 app = Flask(__name__)
 CORS(app)
@@ -17,7 +19,6 @@ def health():
 @app.route("/", methods=["POST"])
 def run():
     try:
-        # 🔴 Validate env vars
         if not ROBOFLOW_API_KEY or not WORKFLOW_URL:
             return jsonify({
                 "error": "Missing ROBOFLOW_API_KEY or WORKFLOW_URL"
@@ -25,7 +26,7 @@ def run():
 
         image_input = None
 
-        # 1️⃣ FILE UPLOAD (multipart/form-data)
+        # FILE UPLOAD
         if "file" in request.files:
             file = request.files["file"]
             image_input = {
@@ -33,7 +34,7 @@ def run():
                 "value": base64.b64encode(file.read()).decode("utf-8")
             }
 
-        # 2️⃣ JSON INPUT (URL or BASE64)
+        # JSON INPUT
         elif request.is_json:
             data = request.json
 
@@ -49,13 +50,9 @@ def run():
                     "value": data["base64"].split(",")[-1]
                 }
 
-        if not image_input:
+        if image_input is None:
             return jsonify({"error": "No image provided"}), 400
 
-        # 🔵 DEBUG INPUT
-        print("IMAGE INPUT TYPE:", image_input["type"])
-
-        # 3️⃣ SEND TO ROBOFLOW
         rf_res = requests.post(
             WORKFLOW_URL,
             json={
@@ -67,14 +64,21 @@ def run():
             timeout=30
         )
 
-        # 🔴 HANDLE ROBOFLOW FAILURE
         if rf_res.status_code != 200:
             return jsonify({
-                "error": "Roboflow request failed",
+                "error": "Roboflow error",
                 "status": rf_res.status_code,
                 "details": rf_res.text
             }), 500
 
         return jsonify(rf_res.json())
 
-    except
+    except Exception as e:
+        return jsonify({"error": str(e)}), 500
+
+
+if __name__ == "__main__":
+    app.run(
+        host="0.0.0.0",
+        port=int(os.environ.get("PORT", 10000))
+    )
